@@ -2,10 +2,8 @@ import React from 'react';
 import {
   useExtensionApi,
   render,
-  Banner,
   useTranslate,
   BlockStack,
-  Text
 } from '@shopify/checkout-ui-extensions-react';
 
 import DatePicker from './components/DatePicker.jsx';
