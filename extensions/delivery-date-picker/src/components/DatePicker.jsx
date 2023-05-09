@@ -22,8 +22,8 @@ const getDaysInMonth = (monthIndex) => {
 
 function DatePicker(props) {
 
-  const [selectedMonth, setSelectedMonth] = useState(0);
   const [selectedDay, setSelectedDay] = useState(0);
+  const [selectedMonth, setSelectedMonth] = useState(0);
   const [daysOfMonth, setDaysOfMonth] = useState([]);
 
   const applyMetafieldsChange = useApplyMetafieldsChange();
@@ -32,33 +32,31 @@ function DatePicker(props) {
   const metafieldNamespace = "custom";
   const metafieldKey = "desired_delivery_date";
 
-  const getDateAsString = () => {
+  const getDateAsString = (monthIndex, dayIndex) => {
 
     const options = { month: 'long' };
-    const monthName = new Date(0, selectedMonth).toLocaleString('en-US', options);
+    const monthName = new Date(0, monthIndex).toLocaleString('en-US', options);
 
-    return `${monthName} ${selectedDay}`;
+    return `${monthName} ${dayIndex}`;
   }
 
   const initMonth = () => {
-    if (0 == selectedMonth){
-      console.log('initialising months...');
-      const date = new Date();
-      const currentMonthIndex = date.getMonth();
-      setSelectedMonth(currentMonthIndex);
-    }
+    console.log('initialising months...');
+    const date = new Date();
+    const currentMonthIndex = date.getMonth();
+    refreshMonthDays(currentMonthIndex);
   }
 
-  const refreshMonthDays = () => {
+  const refreshMonthDays = (monthIndex) => {
 
-    if (0 == selectedMonth){
+    if (0 == monthIndex){
       console.log('No month set, cannot refresh days');
       return;
     }
 
     console.log('Refresing days...');
 
-    const monthDays = getDaysInMonth(selectedMonth);
+    const monthDays = getDaysInMonth(monthIndex);
 
     const days = [];
 
@@ -73,9 +71,23 @@ function DatePicker(props) {
     setDaysOfMonth(days);
   }
 
-  const saveMetafieldValue = async () => {
+  const handleMonthChange = (monthIndex) => {
+    console.log(`month input changed ${monthIndex}`);
+    setSelectedMonth(monthIndex);
+    refreshMonthDays(monthIndex);
+    setSelectedDay(1);
+    saveMetafieldValue(monthIndex, 1);
+  }
 
-    const dateString = getDateAsString();
+  const handleDayChange = (dayIndex) => {
+    console.log(`day input changed ${dayIndex}`);
+    setSelectedDay(dayIndex);
+    saveMetafieldValue(selectedMonth, dayIndex);
+  }
+
+  const saveMetafieldValue = async (monthIndex, dayIndex) => {
+
+    const dateString = getDateAsString(monthIndex, dayIndex);
 
     console.log(`Saving metafield value: ${dateString}`);
 
@@ -96,24 +108,6 @@ function DatePicker(props) {
     initMonth();
 
   }, []);
-
-  useEffect(() => {
-
-    console.log('ON MONTH CHANGE');
-    refreshMonthDays();
-    setSelectedDay(1);
-    saveMetafieldValue();
-
-  }, [selectedMonth]);
-
-  useEffect(() => {
-
-    console.log('ON DAY CHANGE');
-
-    saveMetafieldValue();
-
-  }, [selectedDay]);
-
 
   // Get a reference to the metafield
   const deliveryDateMetafield = useMetafield({
@@ -146,10 +140,9 @@ function DatePicker(props) {
       <View border="base" padding="base">
         <Select
           label="Month"
-          id="delivery_date_month"
           value={selectedMonth}
           options={months}
-          onChange={setSelectedMonth}
+          onChange={(value)=>{handleMonthChange(value)}}
           required={true}
         />
       </View>
@@ -158,7 +151,7 @@ function DatePicker(props) {
           label="Day"
           value={selectedDay}
           options={daysOfMonth}
-          onChange={setSelectedDay}
+          onChange={(value)=>{handleDayChange(value)}}
           required={true}
         />
       </View>
